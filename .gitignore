@@ -1,0 +1,5 @@
+.vs/
+# Ignore files and directories in obj/ directory
+obj/
+bin/
+Migrations/

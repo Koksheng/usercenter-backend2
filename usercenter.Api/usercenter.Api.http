@@ -1,0 +1,10 @@
+@usercenter.Api_HostAddress = http://localhost:5232
+
+GET {{usercenter.Api_HostAddress}}/User/GetUser?id=1
+Accept: application/json
+
+###
+
+GET {{usercenter.Api_HostAddress}}/api/user/GetUser?id=0
+
+###
