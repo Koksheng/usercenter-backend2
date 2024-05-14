@@ -17,7 +17,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\usercenter.Application\usercenter.Application.csproj" />
     <ProjectReference Include="..\usercenter.Contracts\usercenter.Contracts.csproj" />
+    <ProjectReference Include="..\usercenter.Infrastructure\usercenter.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

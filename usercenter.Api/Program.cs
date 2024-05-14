@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using usercenter.Api.Data;
-using usercenter.Api.Services.Users;
+using usercenter.Application.Data;
+using usercenter.Application;
+using usercenter.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,7 +24,10 @@ builder.Services.AddDbContext<DataContext>(opt =>
     //opt.UseSqlServer("Server=.;Database=usercenter;Trusted_Connection=True;TrustServerCertificate=True;");
     opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
-builder.Services.AddScoped<IUserService, UserService>();
+//builder.Services.AddScoped<IUserService, UserService>();
+builder.Services
+    .AddApplication()
+    .AddInfrastructure();
 
 var app = builder.Build();
 

@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using usercenter.Api.Models;
+using usercenter.Application.Models;
 
-namespace usercenter.Api.Data
+namespace usercenter.Application.Data
 {
     public class DataContext : DbContext
     {

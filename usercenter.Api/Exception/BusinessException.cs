@@ -1,8 +1,8 @@
-﻿using usercenter.Api.Common;
-
-namespace usercenter.Api.Exception
+﻿namespace usercenter.Api.Exception
 {
     using System;
+    using usercenter.Contracts.Common;
+
     public class BusinessException : Exception
     {
         private readonly int _code;

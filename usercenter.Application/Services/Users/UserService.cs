@@ -1,10 +1,7 @@
-﻿using Azure.Core;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using usercenter.Api.Common;
-using usercenter.Api.Data;
-using usercenter.Api.Models;
-using usercenter.Contracts.user;
+﻿using Microsoft.EntityFrameworkCore;
+using usercenter.Application.Common;
+using usercenter.Application.Data;
+using usercenter.Application.Models;
 
 namespace usercenter.Api.Services.Users
 {
@@ -22,10 +19,11 @@ namespace usercenter.Api.Services.Users
             return hashedPassword;
         }
 
-        public async Task CreateUser(User user)
+        public async Task<int> CreateUser(User user)
         {
             var abc = await _context.Users.AddAsync(user);
             var result = await _context.SaveChangesAsync();
+            return result;
         }
 
         public async Task<User> GetUser(int id)
@@ -44,19 +42,30 @@ namespace usercenter.Api.Services.Users
             return user;
         }
 
+        public async Task<bool> CheckPlanetCodeIsExists(string planetCode)
+        {
+            var user = await _context.Users
+                             .Where(u => !u.isDelete && u.planetCode == planetCode)
+                             .FirstOrDefaultAsync();
+            if(user != null)
+                return true;
+            else
+                return false;
+        }
+
         public async Task<List<User>> GetAllUsers()
         {
             return await _context.Users.Where(u => !u.isDelete).ToListAsync();
         }
 
-        public async Task<int> UpsertUser(User user, UpsertUserRequest request)
-        {
-            user.userName = request.username;
-            user.userAccount = request.userAccount;
+        //public async Task<int> UpsertUser(User user, UpsertUserRequest request)
+        //{
+        //    user.userName = request.username;
+        //    user.userAccount = request.userAccount;
 
-            var result = await _context.SaveChangesAsync();
-            return result;
-        }
+        //    var result = await _context.SaveChangesAsync();
+        //    return result;
+        //}
 
         public async Task<bool> DeleteUser(int id)
         {

@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace usercenter.Api.Common
+namespace usercenter.Application.Common
 {
     public class EncryptionService
     {

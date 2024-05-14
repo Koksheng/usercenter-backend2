@@ -8,11 +8,11 @@ using Newtonsoft.Json;
 using System.Numerics;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using usercenter.Api.Common;
-using usercenter.Api.Data;
 using usercenter.Api.Exception;
-using usercenter.Api.Models;
 using usercenter.Api.Services.Users;
+using usercenter.Application.Data;
+using usercenter.Application.Models;
+using usercenter.Contracts.Common;
 using usercenter.Contracts.user;
 
 namespace usercenter.Api.Controllers
@@ -29,6 +29,109 @@ namespace usercenter.Api.Controllers
         {
             _context = context;
             _userService = userService;
+        }
+
+        [HttpPost]
+        public async Task<BaseResponse<int>> userRegister(UserRegisterRequest userRegisterRequest)
+        {
+            // userAccount = UserName in DB
+            if (userRegisterRequest == null)
+            {
+                //return -1;
+                //return new BaseResponse<long>(-1, 0);
+                //return ResultUtils.error<long>(ErrorCode.PARAMS_ERROR);
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数为空");
+            }
+            string userAccount = userRegisterRequest.userAccount;
+            string userPassword = userRegisterRequest.userPassword;
+            string checkPassword = userRegisterRequest.checkPassword;
+            string planetCode = userRegisterRequest.planetCode;
+
+            // 1. Verify
+            if (string.IsNullOrWhiteSpace(userAccount) || string.IsNullOrWhiteSpace(userPassword) || string.IsNullOrWhiteSpace(checkPassword) || string.IsNullOrWhiteSpace(planetCode))
+            {
+                //return -1;
+                //return new BaseResponse<long>(-1, 0);
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数为空");
+            }
+            if (userAccount.Length < 4)
+            {
+                //return -1;
+                //return new BaseResponse<long>(-1, 0);
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户账户过短");
+            }
+            if (userPassword.Length < 8 || checkPassword.Length < 8)
+                //return -1;
+                //return new BaseResponse<long>(-1, 0)；
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "账户密码过短");
+
+            if (planetCode.Length > 5)
+                //return -1;
+                //return new BaseResponse<long>(-1, 0);
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "星球编号过长");
+
+            // userAccount cant contain special character
+            string pattern = @"[^a-zA-Z0-9\s]";
+            if (Regex.IsMatch(userAccount, pattern))
+            {
+                //return -1;
+                //return new BaseResponse<long>(-1, 0);
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户账户有特殊字符");
+            }
+            // userPassword & checkPassword must same
+            if (!userPassword.Equals(checkPassword))
+            {
+                //return -1;
+                //return new BaseResponse<long>(-1, 0);
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "账户密码与检查密码不对等");
+            }
+
+            // userAccount cant existed
+            var user = await _userService.GetUserByUserAccount(userAccount);
+            if (user != null)
+            {
+                if (user.isDelete == false)
+                    //return -1;
+                    //return new BaseResponse<long>(-1, 0);
+                    throw new BusinessException(ErrorCode.NULL_ERROR, "用户账户已有注册记录");
+            }
+
+            // planetCode cant existed
+            var planetCodeExists = await _userService.CheckPlanetCodeIsExists(planetCode);
+            if (planetCodeExists)
+            {
+                //return -1;
+                //return new BaseResponse<long>(-1, 0);
+                throw new BusinessException(ErrorCode.NULL_ERROR, "星球编号已有注册记录");
+            }
+
+            // 2. 加密 (.net core IdentityUser will encrypt themself
+
+            // 3. Insert User to DB
+
+            string hashedPassword = await _userService.EncryptPassword(userPassword);
+            User newUser = new User(
+                0,
+                "",
+                userAccount,
+                "",
+                1,
+                hashedPassword,
+                "",
+                "",
+                1,
+                DateTime.Now,
+                DateTime.Now,
+                false,
+                1,
+                planetCode);
+
+            int result = await _userService.CreateUser(newUser);
+
+            if(result == 0)
+                throw new BusinessException(ErrorCode.STSTEM_ERROR, "创建数据失败");
+
+            return ResultUtils.success(newUser.Id);
         }
 
 
@@ -110,6 +213,22 @@ namespace usercenter.Api.Controllers
             //return safetyUser;
             return ResultUtils.success(safetyUser);
         }
+
+        [HttpPost]
+        public async Task<BaseResponse<int>> userLogout()
+        {
+            var userState = HttpContext.Session.GetString(USER_LOGIN_STATE);
+            if (string.IsNullOrWhiteSpace(userState))
+            {
+                //return -1;
+                //return new BaseResponse<int>(-1, 0);
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "session里找不到用户状态");
+            }
+            HttpContext.Session.Remove(USER_LOGIN_STATE);
+            //return 1;
+            return ResultUtils.success(1);
+        }
+
 
         [HttpGet]
         public async Task<BaseResponse<User>?> getCurrentUser()
@@ -266,22 +385,22 @@ namespace usercenter.Api.Controllers
         }
 
 
-        [HttpPut]
-        public async Task<ActionResult<List<User>>> UpsertUser(UpsertUserRequest request)
-        {
-            var dbUser = await _context.Users.FindAsync(request.id);
-            if (dbUser is null)
-                return NotFound("User not found");
+        //[HttpPut]
+        //public async Task<ActionResult<List<User>>> UpsertUser(UpsertUserRequest request)
+        //{
+        //    var dbUser = await _context.Users.FindAsync(request.id);
+        //    if (dbUser is null)
+        //        return NotFound("User not found");
 
-            //dbUser.userName = request.username;
-            //dbUser.userAccount = request.userAccount;
+        //    //dbUser.userName = request.username;
+        //    //dbUser.userAccount = request.userAccount;
 
-            //await _context.SaveChangesAsync();
-            var result = await _userService.UpsertUser(dbUser, request);
-            //if(result == 1)
+        //    //await _context.SaveChangesAsync();
+        //    var result = await _userService.UpsertUser(dbUser, request);
+        //    //if(result == 1)
 
-            return Ok(await _userService.GetAllUsers());
-        }
+        //    return Ok(await _userService.GetAllUsers());
+        //}
         [HttpDelete]
         public async Task<ActionResult<List<User>>> DeleteUser(int id)
         {

@@ -1,4 +1,4 @@
-﻿namespace usercenter.Api.Common
+﻿namespace usercenter.Contracts.Common
 {
     public class ErrorCode
     {
