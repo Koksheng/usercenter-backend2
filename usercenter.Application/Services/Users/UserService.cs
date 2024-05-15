@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using usercenter.Application.Common;
 using usercenter.Application.Data;
-using usercenter.Application.Models;
+using usercenter.Domain.Entities;
 
 namespace usercenter.Api.Services.Users
 {

@@ -1,5 +1,5 @@
 ﻿
-using usercenter.Application.Models;
+using usercenter.Domain.Entities;
 
 namespace usercenter.Api.Services.Users
 {

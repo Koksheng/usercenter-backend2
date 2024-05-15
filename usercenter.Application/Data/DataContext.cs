@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using usercenter.Application.Models;
+using usercenter.Domain.Entities;
 
 namespace usercenter.Application.Data
 {

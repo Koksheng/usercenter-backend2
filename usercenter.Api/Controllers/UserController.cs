@@ -11,7 +11,7 @@ using System.Text.RegularExpressions;
 using usercenter.Api.Exception;
 using usercenter.Api.Services.Users;
 using usercenter.Application.Data;
-using usercenter.Application.Models;
+using usercenter.Domain.Entities;
 using usercenter.Contracts.Common;
 using usercenter.Contracts.user;
 
