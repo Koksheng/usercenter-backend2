@@ -40,7 +40,7 @@ namespace usercenter.Api.Controllers
             {
                 HttpContext.Session.SetString(USER_LOGIN_STATE, serializedSafetyUser);
             }
-            return ResultUtils.success(safetyUser); ;
+            return ResultUtils.success(safetyUser);
         }
 
         [HttpPost]

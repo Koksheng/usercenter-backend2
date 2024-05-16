@@ -37,6 +37,14 @@ namespace usercenter.Infrastructure.Persistence
 
             return result;
         }
+        public async Task<int> DeleteUser(User user)
+        {
+            // Check if user already exists
+            user.isDelete = true;
+            var result = await _context.SaveChangesAsync();
+
+            return result;
+        }
 
         public async Task<bool> CheckUserPassword(User user, string userPassword)
         {
@@ -92,6 +100,22 @@ namespace usercenter.Infrastructure.Persistence
                 return true;
             else
                 return false;
+        }
+
+        public async Task<User> GetUser(int id)
+        {
+            var user = await _context.Users
+                             .Where(u => !u.isDelete && u.Id == id)
+                             .FirstOrDefaultAsync();
+            return user;
+        }
+
+        public async Task<List<User>> GetSimilarUserByUserName(string userName)
+        {
+            var users = await _context.Users.Where(u => u.userName.Contains(userName) && u.isDelete == false)
+            .ToListAsync();
+
+            return users;
         }
     }
 }

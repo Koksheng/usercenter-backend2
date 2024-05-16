@@ -11,9 +11,12 @@ namespace usercenter.Application.Common.Interfaces.Persistence
     {
         Task<User> GetUserByUserAccount(string userAccount);
         Task<int> CreateUser(User user);
+        Task<int> DeleteUser(User user);
         Task<bool> CheckUserPassword(User user, string userPassword);
         Task<User> GetSafetyUser(User user);
         Task<string> EncryptPassword(string userPassword);
         Task<bool> CheckPlanetCodeIsExists(string planetCode);
+        Task<User> GetUser(int id);
+        Task<List<User>> GetSimilarUserByUserName(string userName);
     }
 }
