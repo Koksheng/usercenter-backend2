@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
 using Newtonsoft.Json;
 using usercenter.Contracts.Common;
+using usercenter.Domain.Exception;
 
 namespace usercenter.Api.Exception
 {

@@ -1,19 +1,13 @@
-﻿using Azure.Core;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using System.Numerics;
-using System.Reflection;
 using System.Text.RegularExpressions;
-using usercenter.Api.Exception;
 using usercenter.Api.Services.Users;
 using usercenter.Application.Data;
 using usercenter.Domain.Entities;
 using usercenter.Contracts.Common;
 using usercenter.Contracts.user;
+using usercenter.Domain.Exception;
 
 namespace usercenter.Api.Controllers
 {
@@ -37,9 +31,6 @@ namespace usercenter.Api.Controllers
             // userAccount = UserName in DB
             if (userRegisterRequest == null)
             {
-                //return -1;
-                //return new BaseResponse<long>(-1, 0);
-                //return ResultUtils.error<long>(ErrorCode.PARAMS_ERROR);
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数为空");
             }
             string userAccount = userRegisterRequest.userAccount;
@@ -50,39 +41,27 @@ namespace usercenter.Api.Controllers
             // 1. Verify
             if (string.IsNullOrWhiteSpace(userAccount) || string.IsNullOrWhiteSpace(userPassword) || string.IsNullOrWhiteSpace(checkPassword) || string.IsNullOrWhiteSpace(planetCode))
             {
-                //return -1;
-                //return new BaseResponse<long>(-1, 0);
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数为空");
             }
             if (userAccount.Length < 4)
             {
-                //return -1;
-                //return new BaseResponse<long>(-1, 0);
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户账户过短");
             }
             if (userPassword.Length < 8 || checkPassword.Length < 8)
-                //return -1;
-                //return new BaseResponse<long>(-1, 0)；
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "账户密码过短");
 
             if (planetCode.Length > 5)
-                //return -1;
-                //return new BaseResponse<long>(-1, 0);
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "星球编号过长");
 
             // userAccount cant contain special character
             string pattern = @"[^a-zA-Z0-9\s]";
             if (Regex.IsMatch(userAccount, pattern))
             {
-                //return -1;
-                //return new BaseResponse<long>(-1, 0);
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户账户有特殊字符");
             }
             // userPassword & checkPassword must same
             if (!userPassword.Equals(checkPassword))
             {
-                //return -1;
-                //return new BaseResponse<long>(-1, 0);
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "账户密码与检查密码不对等");
             }
 
@@ -91,8 +70,6 @@ namespace usercenter.Api.Controllers
             if (user != null)
             {
                 if (user.isDelete == false)
-                    //return -1;
-                    //return new BaseResponse<long>(-1, 0);
                     throw new BusinessException(ErrorCode.NULL_ERROR, "用户账户已有注册记录");
             }
 
@@ -100,16 +77,13 @@ namespace usercenter.Api.Controllers
             var planetCodeExists = await _userService.CheckPlanetCodeIsExists(planetCode);
             if (planetCodeExists)
             {
-                //return -1;
-                //return new BaseResponse<long>(-1, 0);
                 throw new BusinessException(ErrorCode.NULL_ERROR, "星球编号已有注册记录");
             }
 
             // 2. 加密 (.net core IdentityUser will encrypt themself
+            string hashedPassword = await _userService.EncryptPassword(userPassword);
 
             // 3. Insert User to DB
-
-            string hashedPassword = await _userService.EncryptPassword(userPassword);
             User newUser = new User(
                 0,
                 "",
@@ -140,7 +114,6 @@ namespace usercenter.Api.Controllers
         {
             if (userLoginRequest == null)
             {
-                //return null;
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数为空");
             }
             string userAccount = userLoginRequest.userAccount;
@@ -151,43 +124,34 @@ namespace usercenter.Api.Controllers
             // 1. Verify
             if (string.IsNullOrWhiteSpace(userAccount) || string.IsNullOrWhiteSpace(userPassword))
             {
-                //return null;
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数为空");
             }
             if (userAccount.Length < 4)
             {
-                //return null;
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户账户过短");
             }
             if (userPassword.Length < 8)
-                //return null;
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "账户密码过短");
 
             // userAccount cant contain special character
             string pattern = @"[^a-zA-Z0-9\s]";
             if (Regex.IsMatch(userAccount, pattern))
             {
-                //return null;
-                //return ResultUtils.error<User>(ErrorCode.PARAMS_ERROR);
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户账户有特殊字符");
             }
 
             // 2. check user is exist
-            //var user = await userManager.FindByNameAsync(userAccount);
             var user = await _userService.GetUserByUserAccount(userAccount);
             if (user == null)
             {
-                //return null;
                 throw new BusinessException(ErrorCode.NULL_ERROR, "找不到该用户");
             }
             if (user.isDelete == true)
             {
-                //return null;
                 throw new BusinessException(ErrorCode.NULL_ERROR, "找不到该用户 用户已被删除");
             }
             if (user.userStatus != 1)
             {
-                //return null;
                 throw new BusinessException(ErrorCode.NULL_ERROR, "找不到该用户 用户已被锁定");
             }
             if (!await _userService.CheckUserPassword(user, userPassword))
@@ -220,8 +184,6 @@ namespace usercenter.Api.Controllers
             var userState = HttpContext.Session.GetString(USER_LOGIN_STATE);
             if (string.IsNullOrWhiteSpace(userState))
             {
-                //return -1;
-                //return new BaseResponse<int>(-1, 0);
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "session里找不到用户状态");
             }
             HttpContext.Session.Remove(USER_LOGIN_STATE);
@@ -418,5 +380,7 @@ namespace usercenter.Api.Controllers
 
             return Ok(await _userService.GetAllUsers());
         }
+
+
     }
 }

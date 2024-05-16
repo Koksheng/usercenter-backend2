@@ -1,4 +1,4 @@
-﻿namespace usercenter.Api.Exception
+﻿namespace usercenter.Domain.Exception
 {
     using System;
     using usercenter.Contracts.Common;

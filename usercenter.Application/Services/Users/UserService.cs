@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using usercenter.Application.Common;
+using usercenter.Application.Common.Interfaces.Authentication;
 using usercenter.Application.Data;
 using usercenter.Domain.Entities;
 
@@ -8,9 +9,11 @@ namespace usercenter.Api.Services.Users
     public class UserService : IUserService
     {
         private readonly DataContext _context;
-        public UserService(DataContext context)
+        private readonly IJwtTokenGenerator _jwtTokenGenerator;
+        public UserService(DataContext context, IJwtTokenGenerator jwtTokenGenerator)
         {
             _context = context;
+            _jwtTokenGenerator = jwtTokenGenerator;
         }
 
         public async Task<string> EncryptPassword(string userPassword)
@@ -21,8 +24,14 @@ namespace usercenter.Api.Services.Users
 
         public async Task<int> CreateUser(User user)
         {
-            var abc = await _context.Users.AddAsync(user);
+            // Check if user already exists
+            var newUser = await _context.Users.AddAsync(user);
             var result = await _context.SaveChangesAsync();
+
+            // Access the newly generated user ID
+            int newUserId = newUser.Entity.Id;
+            string userName = newUser.Entity.userName;
+            var token = _jwtTokenGenerator.GenerateToken(newUserId, userName);
             return result;
         }
 
@@ -107,6 +116,11 @@ namespace usercenter.Api.Services.Users
                 user.userRole,
                 user.planetCode
                 );
+
+            // Access the newly generated user ID
+            int newUserId = user.Id;
+            string userName = user.userName;
+            var token = _jwtTokenGenerator.GenerateToken(newUserId, userName);
 
             return safetyUser;
         }

@@ -27,7 +27,7 @@ builder.Services.AddDbContext<DataContext>(opt =>
 //builder.Services.AddScoped<IUserService, UserService>();
 builder.Services
     .AddApplication()
-    .AddInfrastructure();
+    .AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 
