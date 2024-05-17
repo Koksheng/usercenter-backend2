@@ -12,7 +12,6 @@ namespace usercenter.Contracts.user
         string userAccount,
         string avatarUrl,
         int gender,
-        string userPassword,
         string phone,
         string email,
         int userStatus,

@@ -375,6 +375,17 @@ namespace usercenter.Api.Controllers
             return ResultUtils.success(result);
         }
 
+        [HttpPost]
+        public async Task<BaseResponse<int>> updateUser(UpsertUserRequest request)
+        {
+            //var result = await _userService.DeleteUser(id);
+            var user = new User() { 
+                Id = request.id,
+            };
+
+            return ResultUtils.success(1);
+        }
+
 
     }
 }

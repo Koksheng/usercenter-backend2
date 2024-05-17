@@ -41,6 +41,7 @@ namespace usercenter.Infrastructure.Persistence
         {
             // Check if user already exists
             user.isDelete = true;
+            user.updateTime = DateTime.Now;
             var result = await _context.SaveChangesAsync();
 
             return result;
