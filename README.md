@@ -4,7 +4,7 @@
 
 ## Project Description
 
-The user-center system is a full-stack project based on .NET Core backend and React frontend. It implements basic functions such as user registration, login, querying, update and delete.
+The user-center system is a full-stack project based on .NET Core backend and React frontend. It implements basic functions such as user registration, login, querying, updating, and deleting.
 
 ## Tech Stack
 
