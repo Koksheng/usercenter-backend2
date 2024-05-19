@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace usercenter.Contracts.user
 {
-    public record CreateUserRequest(
+    public record CommonUserRequest(
+        int id,
         string username,
         string userAccount,
         string avatarUrl,
         int gender,
-        string userPassword,
         string phone,
         string email,
         int userStatus,

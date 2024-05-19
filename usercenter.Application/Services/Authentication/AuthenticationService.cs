@@ -101,14 +101,14 @@ namespace usercenter.Application.Services.Authentication
             if (user != null)
             {
                 if (user.isDelete == false)
-                    throw new BusinessException(ErrorCode.NULL_ERROR, "用户账户已有注册记录");
+                    throw new BusinessException(ErrorCode.EXISTED_ERROR, "用户账户已有注册记录");
             }
 
             // planetCode cant existed
-            var planetCodeExists = await _userRepository.CheckPlanetCodeIsExists(planetCode);
+            var planetCodeExists = await _userRepository.CheckPlanetCodeIsExists(planetCode, null);
             if (planetCodeExists)
             {
-                throw new BusinessException(ErrorCode.NULL_ERROR, "星球编号已有注册记录");
+                throw new BusinessException(ErrorCode.EXISTED_ERROR, "星球编号已有注册记录");
             }
 
             // 2. 加密 (.net core IdentityUser will encrypt themself

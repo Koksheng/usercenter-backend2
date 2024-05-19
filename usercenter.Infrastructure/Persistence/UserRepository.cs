@@ -37,10 +37,28 @@ namespace usercenter.Infrastructure.Persistence
 
             return result;
         }
+
         public async Task<int> DeleteUser(User user)
         {
             // Check if user already exists
             user.isDelete = true;
+            user.updateTime = DateTime.Now;
+            var result = await _context.SaveChangesAsync();
+
+            return result;
+        }
+        public async Task<int> UpdateUser(User user, User updateUser)
+        {
+            // update user
+            user.userName = updateUser.userName;
+            user.userAccount = updateUser.userAccount;
+            user.avatarUrl = updateUser.avatarUrl;
+            user.gender = updateUser.gender;
+            user.phone = updateUser.phone;
+            user.email = updateUser.email;
+            user.userStatus = updateUser.userStatus;
+            user.planetCode = updateUser.planetCode;
+            user.userRole = updateUser.userRole;
             user.updateTime = DateTime.Now;
             var result = await _context.SaveChangesAsync();
 
@@ -92,15 +110,23 @@ namespace usercenter.Infrastructure.Persistence
             return hashedPassword;
         }
 
-        public async Task<bool> CheckPlanetCodeIsExists(string planetCode)
+        public async Task<bool> CheckPlanetCodeIsExists(string planetCode, User? existingUser)
         {
-            var user = await _context.Users
-                             .Where(u => !u.isDelete && u.planetCode == planetCode)
-                             .FirstOrDefaultAsync();
-            if (user != null)
-                return true;
+            if (existingUser == null)
+            {
+                return await _context.Users.AnyAsync(u => !u.isDelete && u.planetCode == planetCode);
+            }
             else
-                return false;
+            {
+                return await _context.Users.AnyAsync(u => !u.isDelete && u.planetCode == planetCode && u.Id != existingUser.Id);
+            }
+            //var user = await _context.Users
+            //                 .Where(u => !u.isDelete && u.planetCode == planetCode)
+            //                 .FirstOrDefaultAsync();
+            //if (user != null)
+            //    return true;
+            //else
+            //    return false;
         }
 
         public async Task<User> GetUser(int id)
@@ -116,6 +142,12 @@ namespace usercenter.Infrastructure.Persistence
             var users = await _context.Users.Where(u => u.userName.Contains(userName) && u.isDelete == false)
             .ToListAsync();
 
+            return users;
+        }
+
+        public async Task<List<User>> SearchUserByFilter(IQueryable<User>? query)
+        {
+            var users = await query.ToListAsync();
             return users;
         }
     }

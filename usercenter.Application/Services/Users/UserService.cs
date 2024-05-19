@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using System.Text.RegularExpressions;
 using usercenter.Application.Common;
 using usercenter.Application.Common.Interfaces.Authentication;
 using usercenter.Application.Common.Interfaces.Persistence;
@@ -21,25 +22,6 @@ namespace usercenter.Api.Services.Users
             _jwtTokenGenerator = jwtTokenGenerator;
             _userRepository = userRepository;
         }
-
-        //public async Task<string> EncryptPassword(string userPassword)
-        //{
-        //    string hashedPassword = EncryptionService.HashPasswordWithKey(userPassword, "usercenter");
-        //    return hashedPassword;
-        //}
-
-        //public async Task<int> CreateUser(User user)
-        //{
-        //    // Check if user already exists
-        //    var newUser = await _context.Users.AddAsync(user);
-        //    var result = await _context.SaveChangesAsync();
-
-        //    // Access the newly generated user ID
-        //    int newUserId = newUser.Entity.Id;
-        //    string userName = newUser.Entity.userName;
-        //    var token = _jwtTokenGenerator.GenerateToken(newUserId, userName);
-        //    return result;
-        //}
 
         public async Task<User> GetCurrentUser(string userState)
         {
@@ -81,46 +63,76 @@ namespace usercenter.Api.Services.Users
             return safetyUsersList;
         }
 
-        //public async Task<User> GetUser(int id)
-        //{
-        //    var user = await _context.Users
-        //                     .Where(u => !u.isDelete && u.Id == id)
-        //                     .FirstOrDefaultAsync();
-        //    return user;
-        //}
+        public async Task<List<User>> SearchUserList(User user)
+        {
+            var query = _context.Users.Where(u => !u.isDelete);
 
-        //public async Task<User> GetUserByUserAccount(string userAccount)
-        //{
-        //    var user = await _context.Users
-        //                     .Where(u => !u.isDelete && u.userAccount == userAccount)
-        //                     .FirstOrDefaultAsync();
-        //    return user;
-        //}
+            if (!string.IsNullOrEmpty(user.userName))
+            {
+                query = query.Where(u => u.userName.Contains(user.userName));
+            }
 
-        //public async Task<bool> CheckPlanetCodeIsExists(string planetCode)
-        //{
-        //    var user = await _context.Users
-        //                     .Where(u => !u.isDelete && u.planetCode == planetCode)
-        //                     .FirstOrDefaultAsync();
-        //    if(user != null)
-        //        return true;
-        //    else
-        //        return false;
-        //}
+            if (!string.IsNullOrEmpty(user.userAccount))
+            {
+                query = query.Where(u => u.userAccount.Contains(user.userAccount));
+            }
 
-        //public async Task<List<User>> GetAllUsers()
-        //{
-        //    return await _context.Users.Where(u => !u.isDelete).ToListAsync();
-        //}
+            if (!string.IsNullOrEmpty(user.avatarUrl))
+            {
+                query = query.Where(u => u.avatarUrl.Contains(user.avatarUrl));
+            }
 
-        //public async Task<int> UpsertUser(User user, UpsertUserRequest request)
-        //{
-        //    user.userName = request.username;
-        //    user.userAccount = request.userAccount;
+            if (user.gender != 0)
+            {
+                query = query.Where(u => u.gender == user.gender);
+            }
 
-        //    var result = await _context.SaveChangesAsync();
-        //    return result;
-        //}
+            if (!string.IsNullOrEmpty(user.phone))
+            {
+                query = query.Where(u => u.phone.Contains(user.phone));
+            }
+
+            if (!string.IsNullOrEmpty(user.email))
+            {
+                query = query.Where(u => u.email.Contains(user.email));
+            }
+
+            if (user.userStatus != 0)
+            {
+                query = query.Where(u => u.userStatus == user.userStatus);
+            }
+
+            if (!string.IsNullOrEmpty(user.planetCode))
+            {
+                query = query.Where(u => u.planetCode.Contains(user.planetCode));
+            }
+
+            if (user.userRole != 0)
+            {
+                query = query.Where(u => u.userRole == user.userRole);
+            }
+
+            // Check if createTime has been set (not default)
+            if (user.createTime != default(DateTime))
+            {
+                query = query.Where(u => u.createTime == user.createTime);
+            }
+
+            var users = await _userRepository.SearchUserByFilter(query);
+
+            // Create a list to store simplified user objects
+            List<User> safetyUsersList = new List<User>();
+
+            // Loop through each user and call getSafetyUser to get simplified user object
+            foreach (var u in users)
+            {
+                var safetyUser = await _userRepository.GetSafetyUser(u);
+                safetyUsersList.Add(safetyUser);
+
+            }
+
+            return safetyUsersList;
+        }
 
         public async Task<int> DeleteUser(int id)
         {
@@ -136,43 +148,46 @@ namespace usercenter.Api.Services.Users
             return result;
         }
 
-        //public async Task<bool> CheckUserPassword(User user, string userPassword)
-        //{
-        //    string hashedPassword = await EncryptPassword(userPassword);
-        //    if (user.userPassword == hashedPassword)
-        //    {
-        //        return true;
-        //    }
-        //    else
-        //    {
-        //        return false;
-        //    }
-        //}
+        public async Task<int> UpdateUser(User updateUser)
+        {
+            var user = await _userRepository.GetUser(updateUser.Id);
+            // 1. verify
+            if (user is null)
+                throw new BusinessException(ErrorCode.NULL_ERROR, "用户不存在");
 
-        //public async Task<User> GetSafetyUser(User user)
-        //{
-        //    User safetyUser = new User(
-        //        user.Id, 
-        //        user.userName,
-        //        user.userAccount,
-        //        user.avatarUrl,
-        //        user.gender,
-        //        user.phone,
-        //        user.email,
-        //        user.userStatus,
-        //        user.createTime,
-        //        user.updateTime,
-        //        user.isDelete,
-        //        user.userRole,
-        //        user.planetCode
-        //        );
+            if (string.IsNullOrWhiteSpace(updateUser.userAccount) || string.IsNullOrWhiteSpace(updateUser.planetCode))
+            {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数为空");
+            }
+            if (updateUser.userAccount.Length < 4)
+            {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户账户过短");
+            }
 
-        //    // Access the newly generated user ID
-        //    int newUserId = user.Id;
-        //    string userName = user.userName;
-        //    var token = _jwtTokenGenerator.GenerateToken(newUserId, userName);
+            if (updateUser.planetCode.Length > 5)
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "星球编号过长");
 
-        //    return safetyUser;
-        //}
+            // userAccount cant contain special character
+            string pattern = @"[^a-zA-Z0-9\s]";
+            if (Regex.IsMatch(updateUser.userAccount, pattern))
+            {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户账户有特殊字符");
+            }
+
+            // planetCode cant existed
+            var planetCodeExists = await _userRepository.CheckPlanetCodeIsExists(updateUser.planetCode, user);
+            if (planetCodeExists)
+            {
+                throw new BusinessException(ErrorCode.NULL_ERROR, "星球编号已有注册记录");
+            }
+
+            // Update it
+            int result = await _userRepository.UpdateUser(user, updateUser);
+
+            if (result == 0)
+                throw new BusinessException(ErrorCode.STSTEM_ERROR, "删除数据失败");
+            return result;
+        }
+
     }
 }
