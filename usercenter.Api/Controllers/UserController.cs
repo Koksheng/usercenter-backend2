@@ -37,12 +37,12 @@ namespace usercenter.Api.Controllers
             return ResultUtils.success(currentSafetyUser);
         }
 
-        [HttpGet]
-        public async Task<BaseResponse<List<User>>?> searchUsers(string? username)
-        {
-            var safetyUsersList = await _userService.SearchUser(username);
-            return ResultUtils.success(safetyUsersList);
-        }
+        //[HttpGet]
+        //public async Task<BaseResponse<List<User>>?> searchUsers(string? username)
+        //{
+        //    var safetyUsersList = await _userService.SearchUser(username);
+        //    return ResultUtils.success(safetyUsersList);
+        //}
 
         [HttpGet]
         public async Task<BaseResponse<List<User>>?> searchUserList([FromQuery] SearchUserRequest request)
